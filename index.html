@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Divy Jain | 3D Journey</title>
+    <meta name="description" content="A 3D scroll-driven journey through Divy Jain's portfolio.">
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none';">
+    <meta name="referrer" content="no-referrer">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        /* =========================================
+           DESIGN TOKENS & VARIABLES
+           ========================================= */
+        :root {
+            --color-bg: #020204;
+            --color-text-primary: #ffffff;
+            --color-text-secondary: #a0a0b0;
+
+            --color-accent: #00f0ff;
+
+            --font-heading: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+
+            --glass-bg: rgba(10, 10, 15, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-blur: blur(20px);
+
+            --transition-smooth: 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* =========================================
+           RESET & BASE STYLES
+           ========================================= */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--color-bg);
+            color: var(--color-text-primary);
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* =========================================
+           TYPOGRAPHY
+           ========================================= */
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: var(--font-heading);
+            font-weight: 800;
+        }
+
+        @keyframes gradient-shift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .title {
+            font-size: clamp(4rem, 10vw, 7rem);
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #fff, #00f0ff, #bf00ff, #00f0ff, #fff);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
+            display: inline-block;
+            animation: gradient-shift 6s linear infinite;
+        }
+
+        .subtitle {
+            font-weight: 500;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--color-accent);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .large-body {
+            font-size: 1.3rem;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+            color: #fff;
+        }
+
+        .tagline {
+            max-width: 650px;
+            margin: 0 auto 3rem auto;
+            color: var(--color-text-secondary);
+        }
+
+        /* =========================================
+           LAYOUT
+           ========================================= */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .ui-layer {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+        }
+
+        .scroll-spacer {
+            height: 40vh;
+        }
+
+        /* =========================================
+           NAVIGATION & STATUS INDICATOR
+           ========================================= */
+        .glass-nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: linear-gradient(to bottom, rgba(2, 2, 4, 0.9), transparent);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: var(--transition-smooth);
+            backdrop-filter: blur(10px);
+        }
+
+        .status-indicator:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(0, 255, 102, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .status-indicator span {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #00ff66;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ff66;
+            animation: pulse-green 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(0, 255, 102, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(0, 255, 102, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(0, 255, 102, 0);
+            }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: var(--transition-smooth);
+        }
+
+        .nav-link:hover {
+            color: var(--color-accent);
+        }
+
+        /* Buttons */
+        .glass-btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: var(--transition-smooth);
+        }
+
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--color-accent);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .glass-btn.large {
+            font-size: 1.2rem;
+            padding: 1rem 3rem;
+        }
+
+        .highlight-btn {
+            background: rgba(0, 240, 255, 0.1);
+            border-color: rgba(0, 240, 255, 0.5);
+            color: var(--color-accent);
+        }
+
+        /* =========================================
+           HERO SECTION
+           ========================================= */
+        .hero-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            padding: 0 5%;
+            text-align: center;
+            padding-top: 5rem;
+            /* Account for fixed nav */
+        }
+
+        .hero-content-transparent {
+            max-width: 900px;
+        }
+
+        /* =========================================
+           CONTENT SECTIONS & PANELS
+           ========================================= */
+        .content-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0 5%;
+            min-height: 50vh;
+        }
+
+        /* Section Dividers */
+        .section-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .section-divider span {
+            font-family: var(--font-heading);
+            color: var(--color-accent);
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+
+        .section-divider .line {
+            height: 1px;
+            flex-grow: 1;
+            background: linear-gradient(to right, var(--color-accent), transparent);
+            opacity: 0.5;
+        }
+
+        .glass-panel {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            padding: 4rem;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .glass-panel.wide-panel {
+            max-width: 1000px;
+        }
+
+        .glass-panel h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        /* Skills Badges */
+        .skills-container {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 2.5rem;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--color-text-primary);
+            padding: 0.5rem 1.2rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            transition: var(--transition-smooth);
+        }
+
+        .badge:hover {
+            border-color: var(--color-accent);
+            background: rgba(0, 240, 255, 0.05);
+            color: var(--color-accent);
+            transform: translateY(-2px);
+        }
+
+        /* Certificates Grid */
+        .cert-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .cert-item {
+            background: transparent;
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition-smooth);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cert-item:hover {
+            background: rgba(0, 240, 255, 0.05);
+            border-color: rgba(0, 240, 255, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .cert-issuer {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .cert-item h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            flex-grow: 1;
+        }
+
+        .cert-date {
+            color: var(--color-accent);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .cert-link {
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .cert-link:hover {
+            color: var(--color-accent);
+        }
+
+        /* =========================================
+           SCROLL REVEAL ANIMATIONS
+           ========================================= */
+        .reveal {
+            opacity: 0;
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translate(0, 0);
+        }
+
+        .fade-up {
+            transform: translateY(100px);
+        }
+
+        /* Mouse Indicator */
+        .scroll-indicator {
+            margin-top: 4rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            font-family: var(--font-heading);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            color: var(--color-text-secondary);
+        }
+
+        .mouse {
+            width: 24px;
+            height: 36px;
+            border: 2px solid var(--color-text-secondary);
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .mouse::before {
+            content: '';
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: var(--color-accent);
+            border-radius: 50%;
+            animation: scroll-wheel 2s infinite;
+        }
+
+        @keyframes scroll-wheel {
+            0% {
+                top: 6px;
+                opacity: 1;
+            }
+
+            100% {
+                top: 20px;
+                opacity: 0;
+            }
+        }
+
+        /* =========================================
+           RESPONSIVE (MOBILE) STYLES
+           ========================================= */
+        @media (max-width: 768px) {
+            .glass-nav {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem 5%;
+                background: rgba(2, 2, 4, 0.95);
+            }
+
+            .nav-links {
+                gap: 1rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .nav-link {
+                font-size: 0.85rem;
+            }
+
+            .title {
+                font-size: clamp(2.5rem, 12vw, 4rem);
+            }
+
+            .glass-panel {
+                padding: 2rem 1.5rem;
+            }
+
+            .glass-btn.large {
+                font-size: 1rem;
+                padding: 0.8rem 1.5rem;
+                width: 100%;
+                text-align: center;
+            }
+
+            .hero-section {
+                padding-top: 8rem;
+            }
+
+            .skills-container {
+                gap: 0.5rem;
+            }
+
+            .badge {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="dark-theme">
+    <!-- 3D Canvas fixed in background -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay (Scrollable) -->
+    <main class="ui-layer">
+
+        <!-- Top Navigation -->
+        <header class="glass-nav">
+            <!-- New Status Indicator Button replacing "DJ." -->
+            <div class="status-indicator" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+                <div class="status-dot"></div>
+                <span>Ready to Build</span>
+            </div>
+
+            <nav class="nav-links">
+                <a href="#about" class="nav-link">About</a>
+                <a href="#certificates" class="nav-link">Certificates</a>
+                <a href="#contact" class="nav-link">Contact</a>
+            </nav>
+        </header>
+
+        <!-- Spacer to allow scrolling before the first section appears -->
+        <div class="scroll-spacer" style="height: 10vh;"></div>
+
+        <!-- HERO SECTION -->
+        <section id="home" class="hero-section reveal fade-up">
+            <div class="hero-content-transparent">
+                <h2 class="subtitle">Web Developer & AI Enthusiast</h2>
+                <h1 class="title">Divy Jain</h1>
+                <p class="large-body tagline">Building next-generation web experiences powered by code, data analytics,
+                    and Artificial Intelligence.</p>
+
+            </div>
+        </section>
+
+        <!-- Reduced spacers -->
+        <div class="scroll-spacer"></div>
+
+        <!-- ABOUT SECTION -->
+        <section id="about" class="content-section reveal fade-up">
+            <div class="section-divider">
+                <span>01</span>
+                <div class="line"></div>
+            </div>
+            <div class="glass-panel">
+                <h2>About Me</h2>
+                <p class="large-body">I am a Website Developer, Coder, and BCA student at Manipal University Jaipur
+                    building modern digital experiences.</p>
+                <p style="margin-bottom: 1rem;">My workflow bridges core coding logic, data analytics, and modern AI.
+                    While I leverage vibe coding with AI tools to build and prototype at high speed, I dive deep into
+                    the source code myself to troubleshoot, debug, and fix complex issues whenever edge cases arise.
+                    When working with data, I uncover actionable patterns to guide clean UX and make smart software
+                    decisions backed by metrics rather than guesswork.</p>
+                <p>Always exploring new tech, shipping side projects, and pushing what the web can do. Let’s build
+                    something together!</p>
+
+                <!-- Skills Badges -->
+                <div class="skills-container">
+                    <span class="badge">Python</span>
+                    <span class="badge">C++</span>
+                    <span class="badge">HTML5</span>
+                    <span class="badge">Data Analytics</span>
+                    <span class="badge">Machine Learning</span>
+                    <span class="badge">Generative AI</span>
+                    <span class="badge">Prompt Engineering</span>
+                    <span class="badge">Vibe Coding</span>
+                    <span class="badge">AI API Integration</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="scroll-spacer"></div>
+
+        <!-- CERTIFICATES SECTION -->
+        <section id="certificates" class="content-section reveal fade-up">
+            <div class="section-divider">
+                <span>02</span>
+                <div class="line"></div>
+            </div>
+            <div class="glass-panel wide-panel">
+                <h2>Certifications</h2>
+                <div class="cert-grid">
+
+                    <div class="cert-item">
+                        <div class="cert-issuer">Google / Coursera</div>
+                        <h4>Google AI Professional Certificate</h4>
+                        <p class="cert-date">June 28, 2026</p>
+                        <a href="https://coursera.org/verify/professional-cert/CHDYQIMDSRQ1" target="_blank"
+                            rel="noopener noreferrer" class="cert-link">Verify Credential &rarr;</a>
+                    </div>
+
+                    <div class="cert-item">
+                        <div class="cert-issuer">Microsoft / Coursera</div>
+                        <h4>Microsoft AI & ML Engineering</h4>
+                        <p class="cert-date">August 27, 2026</p>
+                        <a href="https://coursera.org/verify/professional-cert/2K7Y6DECFHRN" target="_blank"
+                            rel="noopener noreferrer" class="cert-link">Verify Credential &rarr;</a>
+                    </div>
+
+                    <div class="cert-item">
+                        <div class="cert-issuer">University of Oxford / Coursera</div>
+                        <h4>Generative and Agentic AI</h4>
+                        <p class="cert-date">August 5, 2026</p>
+                        <a href="https://coursera.org/verify/CAMBLP3M24M2" target="_blank" rel="noopener noreferrer"
+                            class="cert-link">Verify
+                            Credential &rarr;</a>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <div class="scroll-spacer"></div>
+
+        <!-- CONTACT SECTION -->
+        <section id="contact" class="content-section reveal fade-up">
+            <div class="section-divider">
+                <span>03</span>
+                <div class="line"></div>
+            </div>
+            <div class="glass-panel text-center" style="padding-bottom: 2rem;">
+                <h2 style="font-size: 2rem; margin-bottom: 1rem;">Let’s build something together</h2>
+                <p class="large-body" style="margin: 0 auto 3rem auto; max-width: 600px;">
+                    Whether you have an open role, an exciting project in mind, or just want to chat about code, data,
+                    and AI—my inbox is always open.
+                </p>
+                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <a href="mailto:divygenai@gmail.com" class="glass-btn large highlight-btn">Email</a>
+                    <a href="https://www.linkedin.com/in/divyjain23" target="_blank" rel="noopener noreferrer"
+                        class="glass-btn large">LinkedIn</a>
+                    <a href="https://github.com/divyjain231" target="_blank" rel="noopener noreferrer"
+                        class="glass-btn large">GitHub</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final spacer to allow scrolling past the last element -->
+        <div class="scroll-spacer" style="height: 30vh;"></div>
+
+    </main>
+
+    <!-- Import Map for ES Modules -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+
+        // --- Scroll Reveal Logic for UI ---
+        function initScrollReveal() {
+            const reveals = document.querySelectorAll('.reveal');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                    } else {
+                        // Remove to allow fading out and in repeatedly while flying
+                        entry.target.classList.remove('active');
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: "-10% 0px -20% 0px"
+            });
+
+            reveals.forEach(reveal => {
+                observer.observe(reveal);
+            });
+        }
+        initScrollReveal();
+
+        // --- 3D Scene Setup (The Space Journey) ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x020204, 0.0015);
+
+        // Camera
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+
+        // Renderer
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // --- The Space Environment ---
+        const particleCount = 10000;
+        const particleGeometry = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particleCount * 3);
+        const particleColors = new Float32Array(particleCount * 3);
+
+        const color1 = new THREE.Color(0x00f0ff);
+        const color2 = new THREE.Color(0xbf00ff);
+        const color3 = new THREE.Color(0xffffff);
+
+        for (let i = 0; i < particleCount * 3; i += 3) {
+            const radius = 10 + Math.random() * 90;
+            const theta = Math.random() * 2 * Math.PI;
+
+            particlePositions[i] = radius * Math.cos(theta); // X
+            particlePositions[i + 1] = radius * Math.sin(theta); // Y
+            particlePositions[i + 2] = Math.random() * 2100 - 2000; // Z
+
+            const rand = Math.random();
+            let c = color3;
+            if (rand > 0.8) c = color1;
+            else if (rand > 0.6) c = color2;
+
+            particleColors[i] = c.r;
+            particleColors[i + 1] = c.g;
+            particleColors[i + 2] = c.b;
+        }
+
+        particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        particleGeometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+
+        const particleMaterial = new THREE.PointsMaterial({
+            size: 0.5,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+
+        const starfield = new THREE.Points(particleGeometry, particleMaterial);
+        scene.add(starfield);
+
+        const shapes = [];
+        const shapeGeom = new THREE.IcosahedronGeometry(2, 0);
+        const shapeMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true, transparent: true, opacity: 0.3 });
+
+        for (let i = 0; i < 20; i++) {
+            const mesh = new THREE.Mesh(shapeGeom, shapeMat);
+            mesh.position.set(
+                (Math.random() - 0.5) * 40,
+                (Math.random() - 0.5) * 40,
+                -Math.random() * 1800
+            );
+            mesh.userData = {
+                rx: (Math.random() - 0.5) * 0.02,
+                ry: (Math.random() - 0.5) * 0.02
+            };
+            shapes.push(mesh);
+            scene.add(mesh);
+        }
+
+        // --- Scroll Tracking for Camera Fly-Through ---
+        let currentScroll = 0;
+        let targetScroll = 0;
+
+        window.addEventListener('scroll', () => {
+            targetScroll = window.scrollY;
+        });
+
+        function getScrollPercent() {
+            const h = document.documentElement;
+            const b = document.body;
+            const sh = 'scrollHeight';
+            const maxScroll = (h[sh] || b[sh]) - h.clientHeight;
+            return maxScroll > 0 ? currentScroll / maxScroll : 0;
+        }
+
+        // --- Interactivity (Mouse Parallax) ---
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetX = 0;
+        let targetY = 0;
+        const windowHalfX = window.innerWidth / 2;
+        const windowHalfY = window.innerHeight / 2;
+
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX - windowHalfX) * 0.05;
+            mouseY = (event.clientY - windowHalfY) * 0.05;
+        });
+
+        // --- Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            currentScroll += (targetScroll - currentScroll) * 0.08;
+            const scrollPercent = getScrollPercent();
+
+            const startZ = 50;
+            const endZ = -1800;
+            camera.position.z = startZ + (endZ - startZ) * scrollPercent;
+
+            starfield.rotation.z += 0.0005;
+
+            shapes.forEach(shape => {
+                shape.rotation.x += shape.userData.rx;
+                shape.rotation.y += shape.userData.ry;
+            });
+
+            targetX = mouseX;
+            targetY = mouseY;
+            camera.position.x += (targetX - camera.position.x) * 0.05;
+            camera.position.y += (-targetY - camera.position.y) * 0.05;
+
+            const lookTarget = new THREE.Vector3(0, 0, camera.position.z - 100);
+            camera.lookAt(lookTarget);
+
+            renderer.render(scene, camera);
+        }
+
+        // --- Resize Handler ---
+        window.addEventListener('resize', () => {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        });
+
+        // Start animation
+        animate();
+    </script>
+</body>
+
+</html>
