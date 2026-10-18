@@ -821,12 +821,10 @@
         let mouseY = 0;
         let targetX = 0;
         let targetY = 0;
-        const windowHalfX = window.innerWidth / 2;
-        const windowHalfY = window.innerHeight / 2;
 
         document.addEventListener('mousemove', (event) => {
-            mouseX = (event.clientX - windowHalfX) * 0.05;
-            mouseY = (event.clientY - windowHalfY) * 0.05;
+            mouseX = (event.clientX - window.innerWidth / 2) * 0.05;
+            mouseY = (event.clientY - window.innerHeight / 2) * 0.05;
         });
 
         // --- Animation Loop ---
